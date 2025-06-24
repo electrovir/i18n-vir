@@ -1,7 +1,12 @@
+/* node:coverage disable */
+
 import {createI18nClient} from './i18n-client.js';
 
-const client = await createI18nClient<typeof import('../www-static/locales/en/translation.json')>(
-    '/locales/{{lng}}/{{ns}}.json',
-);
+const languageLoaders = {
+    en: () => import('./translations/en/phrases.js'),
+    de: () => import('./translations/de/phrases.js'),
+};
+
+const client = await createI18nClient(languageLoaders.en, languageLoaders);
 
 console.info(client.get.nested);

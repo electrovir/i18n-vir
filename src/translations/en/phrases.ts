@@ -1,0 +1,7 @@
+export default {
+    key1: 'hello world 1',
+    key2: 'hello world 2',
+    nested: {
+        moreNesting: 'nested value',
+    },
+};

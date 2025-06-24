@@ -4,7 +4,7 @@ module.exports = {
     ...baseConfig,
     ignorePaths: [
         ...baseConfig.ignorePaths,
-        './www-static/locales/de/translation.json',
+        'src/translations/',
     ],
     words: [
         ...baseConfig.words,

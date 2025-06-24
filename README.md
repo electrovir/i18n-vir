@@ -1,6 +1,6 @@
 # i18n-vir
 
-A lightweight wrapper for [`i18next`](https://www.npmjs.com/package/i18next) and [`i18next-http-backend`](https://www.npmjs.com/package/i18next-http-backend) with easy type safety and abstracted boilerplate.
+A lightweight wrapper for [`i18next`](https://www.npmjs.com/package/i18next) with TypeScript loaders.
 
 ## Install
 
@@ -20,12 +20,19 @@ npm i i18n-vir
 ```TypeScript
 import {createI18nClient} from 'i18n-vir';
 
-const client = await createI18nClient<
-    /** Pass in an import type parameter, relative to the current file. */
-    typeof import('../../www-static/locales/en/translation.json')
->(
-    /** A load path is required that will be resolved by a network `fetch()`. */
-    '/locales/{{lng}}/{{ns}}.json',
+/** Each language is defined in a separate TypeScript file for maximum type safety and modularity. */
+const languageLoaders = {
+    en: () => import('../translations/en/phrases.js'),
+    de: () => import('../translations/de/phrases.js'),
+};
+
+const client = await createI18nClient(
+    /**
+     * Provide the default loader first. This will determine your phrases object type (and flag any
+     * translation files that are missing phrases).
+     */
+    languageLoaders.en,
+    languageLoaders,
     /** Optionally provide options. */
     {},
 );

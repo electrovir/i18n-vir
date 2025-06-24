@@ -23,3 +23,6 @@ prettier.config.mjs
 test-files/
 todo.md
 tsconfig.*
+
+src/translations/
+dist/translations/

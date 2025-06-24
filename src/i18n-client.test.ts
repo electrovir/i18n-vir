@@ -3,12 +3,25 @@ import {describe, it} from '@augment-vir/test';
 import {createI18nClient, I18nClient, type I18nClientOptions} from './i18n-client.js';
 
 describe(createI18nClient.name, () => {
-    async function createMockClient(options?: Readonly<I18nClientOptions> | undefined) {
-        return await createI18nClient<typeof import('../www-static/locales/en/translation.json')>(
-            '../www-static/locales/{{lng}}/{{ns}}.json',
-            options,
-        );
+    async function createMockClient(options?: Readonly<I18nClientOptions<any>> | undefined) {
+        const loaders = {
+            en: () => import('./translations/en/phrases.js'),
+            de: () => import('./translations/de/phrases.js'),
+        };
+
+        return await createI18nClient(loaders.en, loaders, options);
     }
+
+    it('flags missing translations', async () => {
+        const loaders = {
+            en: () => import('./translations/en/phrases.js'),
+            de: () => import('./translations/de/missing.js'),
+        };
+
+        // @ts-expect-error: intentionally missing keys in `de/missing.js`.
+        const client = await createI18nClient(loaders.en, loaders, {lng: 'de'});
+        assert.strictEquals(client.get.key2, 'hello world 2', 'should fallback to english');
+    });
 
     it('loads translation files', async () => {
         const client = await createMockClient();
@@ -17,7 +30,7 @@ describe(createI18nClient.name, () => {
         assert.strictEquals(client.get.key1, 'hello world 1');
     });
 
-    it('loads other namespaces', async () => {
+    it('loads only a single namespace', async () => {
         const client = await createMockClient({
             ns: [
                 'translation',
@@ -28,7 +41,7 @@ describe(createI18nClient.name, () => {
         assert.strictEquals(
             // @ts-expect-error: types for namespaces are not supported yet.
             client.get['translation-2:key1'],
-            '2 hello world 1',
+            'hello world 1',
         );
     });
     it('loads other languages', async () => {
@@ -40,13 +53,19 @@ describe(createI18nClient.name, () => {
 
 describe(I18nClient.name, () => {
     it('requires initialization', async () => {
-        const client = new I18nClient<typeof import('../www-static/locales/en/translation.json')>(
-            '../www-static/locales/{{lng}}/{{ns}}.json',
-        );
+        const client = new I18nClient({
+            en: () => import('./translations/en/phrases.js'),
+        });
         assert.throws(() => {
             client.get.key1;
         });
         await client.init();
         assert.strictEquals(client.get.key1, 'hello world 1');
+    });
+    it('handles missing loaders', async () => {
+        // @ts-expect-error: missing loaders
+        const client = new I18nClient();
+        await client.init();
+        assert.strictEquals(client.get.key1, 'key1');
     });
 });
