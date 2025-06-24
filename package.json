@@ -44,6 +44,7 @@
     },
     "dependencies": {
         "@augment-vir/assert": "^31.23.3",
+        "@augment-vir/common": "^31.25.0",
         "i18next": "^25.2.1",
         "i18next-http-backend": "^3.0.2"
     },

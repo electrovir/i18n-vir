@@ -1,5 +1,6 @@
 import i18next, {type InitOptions} from 'i18next';
 import I18NextHttpBackend, {type HttpBackendOptions} from 'i18next-http-backend';
+import {Locale} from './locale/locale.js';
 
 /**
  * Base type for translations files.
@@ -61,7 +62,7 @@ export class I18nClient<TranslationFile extends BaseTranslations> {
             .use(I18NextHttpBackend)
             .init<HttpBackendOptions>({
                 lng: globalThis.navigator.language,
-                fallbackLng: 'en',
+                fallbackLng: Locale.en,
                 lowerCaseLng: true,
                 returnObjects: true,
                 backend: {
