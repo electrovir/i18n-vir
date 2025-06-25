@@ -1,5 +1,6 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
+import {generateDevPhrases} from './generate-dev-phrases.js';
 import {createI18nClient, I18nClient, type I18nClientOptions} from './i18n-client.js';
 import {Locale} from './locale/locale.js';
 
@@ -26,6 +27,22 @@ describe(createI18nClient.name, () => {
             {lng: 'de'},
         );
         assert.strictEquals(client.get.key2, 'hello world 2', 'should fallback to english');
+    });
+
+    it('supports dev replacements', async () => {
+        const client = await createI18nClient(
+            Locale.en,
+            {
+                en: () => import('./translations/en/phrases.js'),
+                de: () => import('./translations/de/phrases.js'),
+                dev: () => generateDevPhrases(import('./translations/en/phrases.js'), 'XYZ'),
+            },
+            {lng: 'dev-long'},
+        );
+        assert.strictEquals(client.get.key1, 'XYZ');
+        assert.strictEquals(client.get.key2, 'XYZ');
+        assert.strictEquals(client.get.nested.moreNesting, 'XYZ');
+        assert.strictEquals(client.get.interop({name: 'whatever'}), 'XYZ');
     });
 
     it('type errors on missing default language', async () => {
