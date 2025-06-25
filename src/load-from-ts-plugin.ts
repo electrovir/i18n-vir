@@ -1,20 +1,37 @@
 import {arrayToObject, awaitAllPromisesInObject} from '@augment-vir/common';
 import {type Services} from 'i18next';
+import {type BasePhrases} from './interpolations.js';
 import {type Locale} from './locale/locale.js';
-
-/**
- * Base type for translations files.
- *
- * @category Internal
- */
-export type BasePhrases = {[Key in string]: string | BasePhrases};
 
 /**
  * A function that loads phrases.
  *
  * @category Internal
  */
-export type PhrasesLoader<Phrases extends BasePhrases> = () => Promise<{default: Phrases}>;
+export type PhrasesLoader<Phrases extends BasePhrases = BasePhrases> = () => Promise<{
+    default: Phrases;
+}>;
+
+/**
+ * Extracts phrases from an individual loader. Used in {@link ExtractPhrasesFromLoaders}.
+ *
+ * @category Internal
+ */
+export type ExtractPhrasesFromLoader<Loader extends PhrasesLoader> = Awaited<
+    ReturnType<Loader>
+>['default'];
+
+/**
+ * Extracts the expected phrases object shape from a specific loaders instance.
+ *
+ * @category Internal
+ */
+export type ExtractPhrasesFromLoaders<
+    Loaders extends LoadFromTsOptions['loaders'],
+    DefaultLanguage extends Locale,
+> = DefaultLanguage extends keyof Loaders
+    ? ExtractPhrasesFromLoader<Extract<Loaders[DefaultLanguage], PhrasesLoader>>
+    : never;
 
 /**
  * `i18next` `backend` options for {@link LoadFromTsPlugin}.

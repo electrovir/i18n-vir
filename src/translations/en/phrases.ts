@@ -4,4 +4,5 @@ export default {
     nested: {
         moreNesting: 'nested value',
     },
-};
+    interop: 'Hello there {{name}}.',
+} as const;

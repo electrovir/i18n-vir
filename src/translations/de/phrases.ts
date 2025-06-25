@@ -4,4 +4,5 @@ export default {
     nested: {
         moreNesting: 'verschachtelter Wert',
     },
-};
+    interop: 'Hallo {{name}}',
+} as const;

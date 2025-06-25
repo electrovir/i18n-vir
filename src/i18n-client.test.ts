@@ -1,6 +1,7 @@
 import {assert} from '@augment-vir/assert';
 import {describe, it} from '@augment-vir/test';
 import {createI18nClient, I18nClient, type I18nClientOptions} from './i18n-client.js';
+import {Locale} from './locale/locale.js';
 
 describe(createI18nClient.name, () => {
     async function createMockClient(options?: Readonly<I18nClientOptions<any>> | undefined) {
@@ -9,18 +10,40 @@ describe(createI18nClient.name, () => {
             de: () => import('./translations/de/phrases.js'),
         };
 
-        return await createI18nClient(loaders.en, loaders, options);
+        return await createI18nClient(Locale.en, loaders, options);
     }
 
-    it('flags missing translations', async () => {
-        const loaders = {
-            en: () => import('./translations/en/phrases.js'),
-            de: () => import('./translations/de/missing.js'),
-        };
-
-        // @ts-expect-error: intentionally missing keys in `de/missing.js`.
-        const client = await createI18nClient(loaders.en, loaders, {lng: 'de'});
+    it('type errors on missing translations', async () => {
+        const client = await createI18nClient(
+            Locale.en,
+            // @ts-expect-error: missing a key in the `de` file
+            {
+                en: () => import('./translations/en/phrases.js'),
+                de: () => import('./translations/de/missing.js'),
+            },
+            {lng: 'de'},
+        );
         assert.strictEquals(client.get.key2, 'hello world 2', 'should fallback to english');
+    });
+
+    it('type errors on missing default language', async () => {
+        await assert.throws(() =>
+            createI18nClient(
+                Locale.en,
+                // @ts-expect-error: intentionally missing `en`
+                {
+                    de: () => import('./translations/de/missing.js'),
+                },
+                {lng: 'de'},
+            ),
+        );
+    });
+
+    it('handles interpolation', async () => {
+        const client = await createMockClient();
+
+        assert.deepEquals(client.get.nested, {moreNesting: 'nested value'});
+        assert.strictEquals(client.get.interop({name: 'John'}), 'Hello there John.');
     });
 
     it('loads translation files', async () => {
@@ -30,7 +53,7 @@ describe(createI18nClient.name, () => {
         assert.strictEquals(client.get.key1, 'hello world 1');
     });
 
-    it('loads only a single namespace', async () => {
+    it('does not load other namespaces', async () => {
         const client = await createMockClient({
             ns: [
                 'translation',
@@ -38,10 +61,9 @@ describe(createI18nClient.name, () => {
             ],
         });
 
-        assert.strictEquals(
+        assert.isUndefined(
             // @ts-expect-error: types for namespaces are not supported yet.
             client.get['translation-2:key1'],
-            'hello world 1',
         );
     });
     it('loads other languages', async () => {
@@ -56,16 +78,13 @@ describe(I18nClient.name, () => {
         const client = new I18nClient({
             en: () => import('./translations/en/phrases.js'),
         });
-        assert.throws(() => {
-            client.get.key1;
-        });
+        assert.isUndefined(client.get.key1 as unknown);
         await client.init();
         assert.strictEquals(client.get.key1, 'hello world 1');
     });
     it('handles missing loaders', async () => {
         // @ts-expect-error: missing loaders
         const client = new I18nClient();
-        await client.init();
-        assert.strictEquals(client.get.key1, 'key1');
+        await assert.throws(() => client.init());
     });
 });
