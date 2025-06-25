@@ -187,7 +187,9 @@ export type SimplifyPhrases<Phrases extends BasePhrases> = {
  */
 export async function createI18nClient<
     const DefaultLanguage extends Locale,
-    const Loaders extends {[Key in DefaultLanguage]: PhrasesLoader},
+    const Loaders extends {[Key in DefaultLanguage]: PhrasesLoader} & Partial<{
+        [Key in Locale]: PhrasesLoader;
+    }>,
 >(
     /**
      * The default / fallback language to use if the user's current language is not found in your

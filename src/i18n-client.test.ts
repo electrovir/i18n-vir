@@ -5,12 +5,14 @@ import {Locale} from './locale/locale.js';
 
 describe(createI18nClient.name, () => {
     async function createMockClient(options?: Readonly<I18nClientOptions<any>> | undefined) {
-        const loaders = {
-            en: () => import('./translations/en/phrases.js'),
-            de: () => import('./translations/de/phrases.js'),
-        };
-
-        return await createI18nClient(Locale.en, loaders, options);
+        return await createI18nClient(
+            Locale.en,
+            {
+                en: () => import('./translations/en/phrases.js'),
+                de: () => import('./translations/de/phrases.js'),
+            },
+            options,
+        );
     }
 
     it('type errors on missing translations', async () => {
