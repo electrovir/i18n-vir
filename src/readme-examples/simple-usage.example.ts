@@ -1,6 +1,6 @@
-import {createI18nClient, Locale} from '../index.js';
+import {I18nClient, Locale} from '../index.js';
 
-const client = await createI18nClient(
+const client = await I18nClient.createInstance(
     /** Provide the default language. */
     Locale.en,
     /**

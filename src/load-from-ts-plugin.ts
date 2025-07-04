@@ -1,4 +1,4 @@
-import {arrayToObject, awaitAllPromisesInObject} from '@augment-vir/common';
+import {arrayToObject, awaitAllPromisesInObject, log} from '@augment-vir/common';
 import {type Services} from 'i18next';
 import {type BasePhrases} from './interpolations.js';
 import {type Locale} from './locale/locale.js';
@@ -73,7 +73,8 @@ export class LoadFromTsPlugin {
     ): Promise<Record<string, Record<string, BasePhrases>>> {
         const loaders = this.options?.loaders;
 
-        if (!loaders) {
+        if (!loaders || !Object.keys(loaders).length) {
+            log.warning('No TS Loaders.');
             return {};
         }
 
@@ -89,9 +90,14 @@ export class LoadFromTsPlugin {
                 const namespaceLoads: Record<string, Promise<BasePhrases>> = arrayToObject(
                     namespaces,
                     (namespace) => {
-                        const result = loader().then((loaded) => {
-                            return loaded.default;
-                        });
+                        const result = Promise.resolve(loader())
+                            .then((loaded) => {
+                                return loaded.default;
+                            })
+                            .catch((error: unknown) => {
+                                log.error('error:', error);
+                                return {};
+                            });
 
                         return {
                             key: namespace,

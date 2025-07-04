@@ -1,12 +1,13 @@
 import {assert} from '@augment-vir/assert';
+import {createArray} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
 import {generateDevPhrases} from './generate-dev-phrases.js';
-import {createI18nClient, I18nClient, type I18nClientOptions} from './i18n-client.js';
+import {I18nClient, type I18nClientOptions} from './i18n-client.js';
 import {Locale} from './locale/locale.js';
 
-describe(createI18nClient.name, () => {
+describe(I18nClient.createInstance.name, () => {
     async function createMockClient(options?: Readonly<I18nClientOptions<any>> | undefined) {
-        return await createI18nClient(
+        return await I18nClient.createInstance(
             Locale.en,
             {
                 en: () => import('./translations/en/phrases.js'),
@@ -17,7 +18,7 @@ describe(createI18nClient.name, () => {
     }
 
     it('type errors on missing translations', async () => {
-        const client = await createI18nClient(
+        const client = await I18nClient.createInstance(
             Locale.en,
             // @ts-expect-error: missing a key in the `de` file
             {
@@ -30,7 +31,22 @@ describe(createI18nClient.name, () => {
     });
 
     it('supports dev replacements', async () => {
-        const client = await createI18nClient(
+        const client = await I18nClient.createInstance(
+            Locale.en,
+            {
+                en: () => import('./translations/en/phrases.js'),
+                de: () => import('./translations/de/phrases.js'),
+                dev: () => generateDevPhrases(import('./translations/en/phrases.js'), 'XYZ'),
+            },
+            {lng: 'dev-long'},
+        );
+        assert.strictEquals(client.get.key1, 'XYZ');
+        assert.strictEquals(client.get.key2, 'XYZ');
+        assert.strictEquals(client.get.nested.moreNesting, 'XYZ');
+        assert.strictEquals(client.get.interop({name: 'whatever'}), 'XYZ');
+    });
+    it('handles missing loaders', async () => {
+        const client = await I18nClient.createInstance(
             Locale.en,
             {
                 en: () => import('./translations/en/phrases.js'),
@@ -47,7 +63,7 @@ describe(createI18nClient.name, () => {
 
     it('type errors on missing default language', async () => {
         await assert.throws(() =>
-            createI18nClient(
+            I18nClient.createInstance(
                 Locale.en,
                 // @ts-expect-error: intentionally missing `en`
                 {
@@ -56,6 +72,16 @@ describe(createI18nClient.name, () => {
                 {lng: 'de'},
             ),
         );
+    });
+
+    /** It's tricky to get `i18next` to properly create new instances. */
+    it('can create multiple instances in parallel', async () => {
+        await createArray(10, async () => {
+            return await I18nClient.createInstance(Locale.en, {
+                en: () => import('./translations/en/phrases.js'),
+                de: () => import('./translations/de/phrases.js'),
+            });
+        });
     });
 
     it('handles interpolation', async () => {
@@ -89,21 +115,5 @@ describe(createI18nClient.name, () => {
         const client = await createMockClient({lng: 'de'});
 
         assert.strictEquals(client.get.key1, 'Hallo Welt 1');
-    });
-});
-
-describe(I18nClient.name, () => {
-    it('requires initialization', async () => {
-        const client = new I18nClient({
-            en: () => import('./translations/en/phrases.js'),
-        });
-        assert.isUndefined(client.get.key1 as unknown);
-        await client.init();
-        assert.strictEquals(client.get.key1, 'hello world 1');
-    });
-    it('handles missing loaders', async () => {
-        // @ts-expect-error: missing loaders
-        const client = new I18nClient();
-        await assert.throws(() => client.init());
     });
 });

@@ -10,17 +10,14 @@ npm i i18n-vir
 
 ## Usage
 
-1. Use `createI18nClient`.
-2. Pass in a `typeof import` type parameter.
-3. Pass in a load path argument.
-4. Optionally provide additional i18next options.
+A client instance must be constructed by calling `I18nClient.createInstance`:
 
 <!-- example-link: src/readme-examples/simple-usage.example.ts -->
 
 ```TypeScript
-import {createI18nClient, Locale} from 'i18n-vir';
+import {I18nClient, Locale} from 'i18n-vir';
 
-const client = await createI18nClient(
+const client = await I18nClient.createInstance(
     /** Provide the default language. */
     Locale.en,
     /**

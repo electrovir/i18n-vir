@@ -10,9 +10,9 @@ import {type BasePhrases} from './interpolations.js';
  * @example
  *
  * ```ts
- * import {createI18nClient, Locale, generateDevPhrases} from 'i18n-vir';
+ * import {I18nClient, Locale, generateDevPhrases} from 'i18n-vir';
  *
- * const client = await createI18nClient(
+ * const client = await I18nClient.createInstance(
  *     Locale.en,
  *     {
  *         en: () => import('./translations/en/phrases.js'),
