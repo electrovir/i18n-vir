@@ -97,7 +97,7 @@ export class I18nClient<const Phrases extends BasePhrases> {
             lowerCaseLng: true,
             returnObjects: true,
             backend: {
-                loaders: loaders,
+                loaders,
                 ...options?.backend,
             },
             ...options,
