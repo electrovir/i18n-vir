@@ -105,7 +105,9 @@ export class LoadFromTsPlugin {
                         };
                     },
 
-                    {useRequired: true},
+                    {
+                        useRequired: true,
+                    },
                 );
 
                 return {
@@ -115,7 +117,9 @@ export class LoadFromTsPlugin {
                     >,
                 };
             },
-            {useRequired: true},
+            {
+                useRequired: true,
+            },
         );
 
         const allLoaded = await awaitAllPromisesInObject(languageLoads);

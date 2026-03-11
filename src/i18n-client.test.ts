@@ -25,7 +25,9 @@ describe(I18nClient.createInstance.name, () => {
                 en: () => import('./translations/en/phrases.js'),
                 de: () => import('./translations/de/missing.js'),
             },
-            {lng: 'de'},
+            {
+                lng: 'de',
+            },
         );
         assert.strictEquals(client.get.key2, 'hello world 2', 'should fallback to english');
     });
@@ -38,12 +40,19 @@ describe(I18nClient.createInstance.name, () => {
                 de: () => import('./translations/de/phrases.js'),
                 dev: () => generateDevPhrases(import('./translations/en/phrases.js'), 'XYZ'),
             },
-            {lng: 'dev-long'},
+            {
+                lng: 'dev-long',
+            },
         );
         assert.strictEquals(client.get.key1, 'XYZ');
         assert.strictEquals(client.get.key2, 'XYZ');
         assert.strictEquals(client.get.nested.moreNesting, 'XYZ');
-        assert.strictEquals(client.get.interop({name: 'whatever'}), 'XYZ');
+        assert.strictEquals(
+            client.get.interop({
+                name: 'whatever',
+            }),
+            'XYZ',
+        );
     });
     it('handles missing loaders', async () => {
         const client = await I18nClient.createInstance(
@@ -53,12 +62,19 @@ describe(I18nClient.createInstance.name, () => {
                 de: () => import('./translations/de/phrases.js'),
                 dev: () => generateDevPhrases(import('./translations/en/phrases.js'), 'XYZ'),
             },
-            {lng: 'dev-long'},
+            {
+                lng: 'dev-long',
+            },
         );
         assert.strictEquals(client.get.key1, 'XYZ');
         assert.strictEquals(client.get.key2, 'XYZ');
         assert.strictEquals(client.get.nested.moreNesting, 'XYZ');
-        assert.strictEquals(client.get.interop({name: 'whatever'}), 'XYZ');
+        assert.strictEquals(
+            client.get.interop({
+                name: 'whatever',
+            }),
+            'XYZ',
+        );
     });
 
     it('type errors on missing default language', async () => {
@@ -69,7 +85,9 @@ describe(I18nClient.createInstance.name, () => {
                 {
                     de: () => import('./translations/de/missing.js'),
                 },
-                {lng: 'de'},
+                {
+                    lng: 'de',
+                },
             ),
         );
     });
@@ -87,14 +105,23 @@ describe(I18nClient.createInstance.name, () => {
     it('handles interpolation', async () => {
         const client = await createMockClient();
 
-        assert.deepEquals(client.get.nested, {moreNesting: 'nested value'});
-        assert.strictEquals(client.get.interop({name: 'John'}), 'Hello there John.');
+        assert.deepEquals(client.get.nested, {
+            moreNesting: 'nested value',
+        });
+        assert.strictEquals(
+            client.get.interop({
+                name: 'John',
+            }),
+            'Hello there John.',
+        );
     });
 
     it('loads translation files', async () => {
         const client = await createMockClient();
 
-        assert.deepEquals(client.get.nested, {moreNesting: 'nested value'});
+        assert.deepEquals(client.get.nested, {
+            moreNesting: 'nested value',
+        });
         assert.strictEquals(client.get.key1, 'hello world 1');
     });
 
@@ -112,7 +139,9 @@ describe(I18nClient.createInstance.name, () => {
         );
     });
     it('loads other languages', async () => {
-        const client = await createMockClient({lng: 'de'});
+        const client = await createMockClient({
+            lng: 'de',
+        });
 
         assert.strictEquals(client.get.key1, 'Hallo Welt 1');
     });

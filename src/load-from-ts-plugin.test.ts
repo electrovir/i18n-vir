@@ -6,7 +6,9 @@ describe(LoadFromTsPlugin.name, () => {
     it('handles missing loaders', async () => {
         const instance = new LoadFromTsPlugin();
         assert.isEmpty(await instance.readMulti([], []));
-        instance.init({} as any, {loaders: {}});
+        instance.init({} as any, {
+            loaders: {},
+        });
         assert.isEmpty(await instance.readMulti([], []));
     });
     it('handles errors', async () => {
@@ -19,7 +21,9 @@ describe(LoadFromTsPlugin.name, () => {
             },
         });
         assert.deepEquals(await instance.readMulti(['en'], ['translation']), {
-            en: {translation: {}},
+            en: {
+                translation: {},
+            },
         });
     });
 });
