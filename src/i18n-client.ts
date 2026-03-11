@@ -1,8 +1,14 @@
 import {check, checkWrap, waitUntil} from '@augment-vir/assert';
-import {mapObjectValues, type AnyObject, type Values} from '@augment-vir/common';
+import {type AnyObject, type Values} from '@augment-vir/common';
 import i18next, {type InitOptions, type TFunction} from 'i18next';
 import {type IsNever} from 'type-fest';
-import {hasInterpolation, type BasePhrases, type PhraseParams} from './interpolations.js';
+import {
+    hasInterpolation,
+    type BasePhrases,
+    type InterpolationPhraseParams,
+    type PhraseParams,
+    type StripPluralSuffix,
+} from './interpolations.js';
 import {
     LoadFromTsPlugin,
     type ExtractPhrasesFromLoader,
@@ -36,18 +42,29 @@ export type BaseGetPhrases = {
  * @category Internal
  */
 export type GetPhrases<Phrases extends BasePhrases> = {
-    [PhraseKey in keyof Phrases]: Phrases[PhraseKey] extends BasePhrases
+    [PhraseKey in Extract<
+        keyof Phrases,
+        string
+    > as StripPluralSuffix<PhraseKey>]: Phrases[PhraseKey] extends BasePhrases
         ? GetPhrases<Phrases[PhraseKey]>
-        : IsNever<
-                PhraseParams<Extract<PhraseKey, string>, Extract<Phrases[PhraseKey], string>>
-            > extends true
-          ? string
-          : (
-                params: PhraseParams<
-                    Extract<PhraseKey, string>,
-                    Extract<Phrases[PhraseKey], string>
-                >,
-            ) => string;
+        : PhraseKey extends `${string}_${string}`
+          ? (
+                params: {count: number} & (IsNever<
+                    InterpolationPhraseParams<Extract<Phrases[PhraseKey], string>>
+                > extends true
+                    ? unknown
+                    : InterpolationPhraseParams<Extract<Phrases[PhraseKey], string>>),
+            ) => string
+          : IsNever<
+                  PhraseParams<Extract<PhraseKey, string>, Extract<Phrases[PhraseKey], string>>
+              > extends true
+            ? string
+            : (
+                  params: PhraseParams<
+                      Extract<PhraseKey, string>,
+                      Extract<Phrases[PhraseKey], string>
+                  >,
+              ) => string;
 };
 
 /**
@@ -135,22 +152,52 @@ function recursivelyMapPhrases(
     phrases: BasePhrases,
     getPhrase: TFunction,
 ): BaseGetPhrases {
-    return mapObjectValues(phrases, (key, value) => {
-        const allKeys = [
-            ...keyChain,
-            key,
-        ];
-        const fullKey = allKeys.join('.');
-        if (check.isObject(value)) {
-            return recursivelyMapPhrases(allKeys, value, getPhrase);
-        } else if (hasInterpolation(key, value)) {
-            return (params: AnyObject) => {
-                return getPhrase(fullKey, params);
-            };
-        } else {
-            return getPhrase(fullKey);
-        }
-    }) as BaseGetPhrases;
+    return Object.entries(phrases).reduce<BaseGetPhrases>(
+        (
+            result,
+            [
+                key,
+                value,
+            ],
+        ) => {
+            const baseKey = stripPluralSuffix(key);
+            const isPluralKey = baseKey !== key;
+
+            if (baseKey in result) {
+                return result;
+            }
+
+            const allKeys = [
+                ...keyChain,
+                baseKey,
+            ];
+            const fullKey = allKeys.join('.');
+
+            if (check.isObject(value)) {
+                result[baseKey] = recursivelyMapPhrases(allKeys, value, getPhrase);
+            } else if (isPluralKey || hasInterpolation(key, value)) {
+                result[baseKey] = (params: AnyObject) => {
+                    return getPhrase(fullKey, params) as string;
+                };
+            } else {
+                result[baseKey] = getPhrase(fullKey);
+            }
+
+            return result;
+        },
+        {},
+    );
+}
+
+/**
+ * Strips everything from the last underscore onward in a key at runtime.
+ *
+ * @category Internal
+ */
+function stripPluralSuffix(key: string) {
+    const underscoreIndex = key.lastIndexOf('_');
+
+    return underscoreIndex >= 0 ? key.slice(0, underscoreIndex) : key;
 }
 
 /**

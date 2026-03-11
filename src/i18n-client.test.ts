@@ -3,6 +3,7 @@ import {createArray} from '@augment-vir/common';
 import {describe, it} from '@augment-vir/test';
 import {generateDevPhrases} from './generate-dev-phrases.js';
 import {I18nClient, type I18nClientOptions} from './i18n-client.js';
+import {type InterpolationValue} from './interpolations.js';
 import {Locale} from './locale/locale.js';
 
 describe(I18nClient.createInstance.name, () => {
@@ -144,5 +145,123 @@ describe(I18nClient.createInstance.name, () => {
         });
 
         assert.strictEquals(client.get.key1, 'Hallo Welt 1');
+    });
+});
+
+describe('i18n-next plural conventions', () => {
+    async function createPluralClient(options?: Readonly<I18nClientOptions<any>> | undefined) {
+        return await I18nClient.createInstance(
+            Locale.en,
+            {
+                en: () => import('./translations/en/plural-phrases.js'),
+                de: () => import('./translations/de/plural-phrases.js'),
+            },
+            options,
+        );
+    }
+
+    it('collapses plural keys into a single callable entry', async () => {
+        const client = await createPluralClient();
+
+        assert.tsType(client.get.item).slowEquals<(params: {count: number}) => string>();
+    });
+
+    it('returns singular form for count=1', async () => {
+        const client = await createPluralClient();
+
+        assert.strictEquals(
+            client.get.item({
+                count: 1,
+            }),
+            '1 item',
+        );
+    });
+
+    it('returns plural form for count!=1', async () => {
+        const client = await createPluralClient();
+
+        assert.strictEquals(
+            client.get.item({
+                count: 5,
+            }),
+            '5 items',
+        );
+    });
+
+    it('returns plural form for count=0', async () => {
+        const client = await createPluralClient();
+
+        assert.strictEquals(
+            client.get.item({
+                count: 0,
+            }),
+            '0 items',
+        );
+    });
+
+    it('handles nested plural keys', async () => {
+        const client = await createPluralClient();
+
+        assert.strictEquals(
+            client.get.nested.child({
+                count: 1,
+            }),
+            '1 child',
+        );
+        assert.strictEquals(
+            client.get.nested.child({
+                count: 3,
+            }),
+            '3 children',
+        );
+    });
+
+    it('handles plurals combined with interpolation', async () => {
+        const client = await createPluralClient();
+
+        assert
+            .tsType(client.get.withInterpolation)
+            .slowEquals<(params: {count: number; name: InterpolationValue}) => string>();
+        assert.strictEquals(
+            client.get.withInterpolation({
+                count: 1,
+                name: 'Alice',
+            }),
+            '1 thing for Alice',
+        );
+        assert.strictEquals(
+            client.get.withInterpolation({
+                count: 3,
+                name: 'Alice',
+            }),
+            '3 things for Alice',
+        );
+    });
+
+    it('does not affect non-plural keys', async () => {
+        const client = await createPluralClient();
+
+        assert.tsType(client.get.simple).equals<string>();
+        assert.strictEquals(client.get.simple, 'no plurals here');
+    });
+
+    it('handles plurals in other languages', async () => {
+        const client = await createPluralClient({
+            lng: 'de',
+        });
+
+        assert.strictEquals(
+            client.get.item({
+                count: 1,
+            }),
+            // cspell:word Gegenstand, Gegenstände
+            '1 Gegenstand',
+        );
+        assert.strictEquals(
+            client.get.item({
+                count: 5,
+            }),
+            '5 Gegenstände',
+        );
     });
 });

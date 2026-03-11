@@ -1,6 +1,15 @@
 import {type IsEqual, type IsUnknown} from 'type-fest';
 
 /**
+ * Strips everything from the last underscore onward in a key (i18next plural suffix convention).
+ *
+ * @category Internal
+ */
+export type StripPluralSuffix<Key extends string> = Key extends `${infer Base}_${string}`
+    ? Base
+    : Key;
+
+/**
  * Base type for translations files.
  *
  * @category Internal
@@ -68,5 +77,14 @@ export type InnerInterpolationExtraction<Phrase extends string> =
  * @category Internal
  */
 export function hasInterpolation(key: string, phrase: string) {
-    return phrase.includes('{{') || key.includes('_');
+    return phrase.includes('{{') || hasPluralSuffix(key);
+}
+
+/**
+ * Checks if a key contains an underscore (i18next plural suffix convention).
+ *
+ * @category Internal
+ */
+export function hasPluralSuffix(key: string) {
+    return key.includes('_');
 }
