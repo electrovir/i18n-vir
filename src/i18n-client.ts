@@ -1,7 +1,6 @@
 import {check, checkWrap, waitUntil} from '@augment-vir/assert';
-import {type AnyObject, type Values} from '@augment-vir/common';
+import {type AnyObject, type IsNever, type Values} from '@augment-vir/common';
 import i18next, {type InitOptions, type TFunction} from 'i18next';
-import {type IsNever} from 'type-fest';
 import {
     hasInterpolation,
     type BasePhrases,
@@ -175,7 +174,13 @@ function recursivelyMapPhrases(
 
             if (check.isObject(value)) {
                 result[baseKey] = recursivelyMapPhrases(allKeys, value, getPhrase);
-            } else if (isPluralKey || hasInterpolation(key, value)) {
+            } else if (
+                isPluralKey ||
+                hasInterpolation({
+                    key,
+                    phrase: value,
+                })
+            ) {
                 result[baseKey] = (params: AnyObject) => {
                     return getPhrase(fullKey, params) as string;
                 };

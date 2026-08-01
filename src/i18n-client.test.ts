@@ -95,12 +95,21 @@ describe(I18nClient.createInstance.name, () => {
 
     /** It's tricky to get `i18next` to properly create new instances. */
     it('can create multiple instances in parallel', async () => {
-        await createArray(10, async () => {
+        const clients = await createArray(10, async () => {
             return await I18nClient.createInstance(Locale.en, {
                 en: () => import('./translations/en/phrases.js'),
                 de: () => import('./translations/de/phrases.js'),
             });
         });
+
+        assert.deepEquals(
+            clients.map((client) => {
+                return client.get.key1;
+            }),
+            createArray(10, () => {
+                return 'hello world 1';
+            }),
+        );
     });
 
     it('handles interpolation', async () => {

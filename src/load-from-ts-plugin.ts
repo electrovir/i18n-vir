@@ -59,6 +59,7 @@ export class LoadFromTsPlugin {
     }
 
     /** Read a language file (called by `i18next` directly). */
+    // eslint-disable-next-line @virmator/prefer-params-object -- i18next requires this to be positional
     public async read(language: string, namespace: string) {
         return (await this.readMulti([language], [namespace]))[language]?.[namespace];
     }
@@ -67,6 +68,7 @@ export class LoadFromTsPlugin {
      * Read multiple language files (called by `i18next` directly, and by
      * {@link LoadFromTsPlugin.read}).
      */
+    // eslint-disable-next-line @virmator/prefer-params-object  -- i18next requires this to be positional
     public async readMulti(
         languages: ReadonlyArray<string>,
         namespaces: ReadonlyArray<string>,

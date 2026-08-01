@@ -1,4 +1,4 @@
-import {type IsEqual, type IsUnknown} from 'type-fest';
+import {type IsEqual, type IsUnknown} from '@augment-vir/common';
 
 /**
  * Strips everything from the last underscore onward in a key (i18next plural suffix convention).
@@ -76,7 +76,7 @@ export type InnerInterpolationExtraction<Phrase extends string> =
  *
  * @category Internal
  */
-export function hasInterpolation(key: string, phrase: string) {
+export function hasInterpolation({key, phrase}: Readonly<{key: string; phrase: string}>) {
     return phrase.includes('{{') || hasPluralSuffix(key);
 }
 

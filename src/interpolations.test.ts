@@ -73,13 +73,28 @@ describe('InnerInterpolationExtraction', () => {
 
 describe(hasInterpolation.name, () => {
     it('returns true for interpolated phrases', () => {
-        assert.isTrue(hasInterpolation('key', 'hello {{name}}'));
+        assert.isTrue(
+            hasInterpolation({
+                key: 'key',
+                phrase: 'hello {{name}}',
+            }),
+        );
     });
     it('returns true for plural keys', () => {
-        assert.isTrue(hasInterpolation('key_one', 'no interpolation'));
+        assert.isTrue(
+            hasInterpolation({
+                key: 'key_one',
+                phrase: 'no interpolation',
+            }),
+        );
     });
     it('returns false for plain phrases with non-plural keys', () => {
-        assert.isFalse(hasInterpolation('key', 'no interpolation'));
+        assert.isFalse(
+            hasInterpolation({
+                key: 'key',
+                phrase: 'no interpolation',
+            }),
+        );
     });
 });
 
